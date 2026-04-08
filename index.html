@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💻</text></svg>">
+    <meta name="description"
+        content="Personal website of Alexey Astafev - Senior Software Engineer & Indie Game Developer. Explore projects and professional profiles.">
+    <title>Alexey Astafev | Software Engineer & Game Developer</title>
+</head>
+<style>
+    :root {
+        --bg-color: #1F1F1F;
+        --grid-color: rgba(255, 255, 255, 0.05);
+        --text-color: #ffffff;
+    }
+
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        background-color: var(--bg-color);
+        background-image:
+            radial-gradient(circle at center, transparent 0%, var(--bg-color) 110%),
+            linear-gradient(var(--grid-color) 1px, transparent 1px),
+            linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
+        background-size: 100% 100%, 50px 50px, 50px 50px;
+        background-position: center;
+        color: var(--text-color);
+        overflow-x: hidden;
+        overflow-y: auto;
+    }
+
+    main {
+        text-align: center;
+    }
+
+    h1 {
+        font-weight: normal;
+        font-family: Georgia, 'Times New Roman', Times, serif;
+        letter-spacing: clamp(2px, 0.8vw, 5px);
+        font-size: clamp(32pt, 10vw, 64pt);
+        margin-bottom: 20px;
+        padding: 0 20px;
+    }
+
+    h2 {
+        font-weight: normal;
+        font-family: Georgia, 'Times New Roman', Times, serif;
+        font-size: clamp(12pt, 4vw, 16pt);
+        opacity: .8;
+        padding: 0 20px;
+        line-height: 1.4;
+    }
+
+    em {
+        color: #808080;
+    }
+
+    a {
+        color: var(--text-color);
+        opacity: .8;
+        text-decoration: none;
+        padding-bottom: 3px;
+        transition: opacity .1s ease-in-out, border-bottom-width .1s ease-in-out;
+        border-bottom: 1px solid #9e9e9e
+    }
+
+    a:hover,
+    a:focus {
+        opacity: 1;
+        outline: none;
+        border-bottom-width: 2px;
+    }
+
+    a:focus-visible {
+        outline: 2px solid var(--text-color);
+        outline-offset: 4px;
+        border-radius: 2px;
+    }
+
+    ul[role="list"] {
+        list-style: none;
+        margin-top: 50px;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 20px 30px;
+        padding: 0 20px;
+    }
+
+    ul[role="list"] li {
+        display: inline-block;
+    }
+</style>
+
+<body>
+    <main>
+        <h1>Alexey Astafev</h1>
+        <h2>Senior Software Engineer <em>&amp;</em> Indie Game Developer</h2>
+        <nav aria-label="Social and professional profiles">
+            <ul role="list">
+                <li><a href="https://github.com/lamaster">Github</a></li>
+                <li><a href="https://www.linkedin.com/in/alexey-astafev">LinkedIn</a></li>
+                <li><a href="https://x.com/walkindizaster">X</a></li>
+                <li><a href="https://walkindizaster.itch.io">itch.io</a></li>
+            </ul>
+        </nav>
+    </main>
+</body>
+
+</html>
