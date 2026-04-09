@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="12" height="20" viewBox="0 0 12 20">
+  <style>
+    text { fill: #ffffff; }
+    @media (prefers-color-scheme: light) {
+      text { fill: #1F2328; }
+    }
+  </style>
+  <text x="0" y="15" font-family="Georgia, 'Times New Roman', Times, serif" font-size="15" opacity="0.8">X</text>
+</svg>
