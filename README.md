@@ -1,6 +1,6 @@
 <p align="center">
 <a href="https://lamaster.github.io">
-    <img src="banner.svg" alt="Alexey Astafev — Senior Software Engineer & Indie Game Developer" width="800"/>
+    <img src="banner-var1.svg" alt="Alexey Astafev — Senior Software Engineer & Indie Game Developer" width="800"/>
 </a>
 </p>
 
