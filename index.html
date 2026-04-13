@@ -13,8 +13,42 @@
 <style>
     :root {
         --bg-color: #1F1F1F;
-        --grid-color: rgba(255, 255, 255, 0.05);
+        --grid-color: rgba(255, 255, 255, 0.12);
         --text-color: #ffffff;
+        --lamp-x: 50vw;
+        --lamp-y: 20vh;
+        --rope-color: #444;
+        --lamp-base-bottom: #444;
+        --lamp-base-top: #222;
+        --lamp-bulb: #fffff0;
+        --lamp-bulb-shadow: #ffffaa;
+        --lamp-bulb-outline: #ffffff;
+        --lamp-light-start: rgba(255, 255, 200, 0.15);
+        --lamp-light-end: rgba(255, 255, 200, 0);
+    }
+
+    @media (prefers-color-scheme: light) {
+        :root {
+            --bg-color: #f5f5f5;
+            --grid-color: rgba(0, 0, 0, 0.15);
+            --text-color: #1a1a1a;
+            --rope-color: #ccc;
+            --lamp-base-bottom: #aaa;
+            --lamp-base-top: #666;
+            --lamp-bulb: #e0e0e0;
+            --lamp-bulb-shadow: transparent;
+            --lamp-bulb-outline: #999;
+            --lamp-light-start: rgba(255, 255, 200, 0);
+            --lamp-light-end: rgba(255, 255, 200, 0);
+        }
+
+        em {
+            color: #666666;
+        }
+
+        a {
+            border-bottom: 1px solid #cccccc;
+        }
     }
 
     * {
@@ -31,7 +65,7 @@
         height: 100vh;
         background-color: var(--bg-color);
         background-image:
-            radial-gradient(circle at center, transparent 0%, var(--bg-color) 110%),
+            radial-gradient(circle at var(--lamp-x) var(--lamp-y), transparent 0%, var(--bg-color) 450px),
             linear-gradient(var(--grid-color) 1px, transparent 1px),
             linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
         background-size: 100% 100%, 50px 50px, 50px 50px;
@@ -118,5 +152,238 @@
         </nav>
     </main>
 </body>
+<script>
+    const canvas = document.createElement('canvas');
+    canvas.style.position = 'absolute';
+    canvas.style.top = '0';
+    canvas.style.left = '0';
+    canvas.style.width = '100vw';
+    canvas.style.height = '100vh';
+    canvas.style.pointerEvents = 'none'; // clicks pass through to main content
+    canvas.style.zIndex = '0';
+    document.body.appendChild(canvas);
+    const g = canvas.getContext('2d');
+
+    const rootStyle = getComputedStyle(document.documentElement);
+    const colors = {
+        rope: '', baseBottom: '', baseTop: '', bulb: '',
+        bulbShadow: '', bulbOutline: '', lightStart: '', lightEnd: ''
+    };
+    
+    const initColors = () => {
+        colors.rope = rootStyle.getPropertyValue('--rope-color').trim();
+        colors.baseBottom = rootStyle.getPropertyValue('--lamp-base-bottom').trim();
+        colors.baseTop = rootStyle.getPropertyValue('--lamp-base-top').trim();
+        colors.bulb = rootStyle.getPropertyValue('--lamp-bulb').trim();
+        colors.bulbShadow = rootStyle.getPropertyValue('--lamp-bulb-shadow').trim();
+        colors.bulbOutline = rootStyle.getPropertyValue('--lamp-bulb-outline').trim();
+        colors.lightStart = rootStyle.getPropertyValue('--lamp-light-start').trim();
+        colors.lightEnd = rootStyle.getPropertyValue('--lamp-light-end').trim();
+    };
+    initColors();
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', initColors);
+
+    let width, height;
+    const resize = () => {
+        width = canvas.width = window.innerWidth;
+        height = canvas.height = window.innerHeight;
+    };
+    window.addEventListener('resize', resize);
+    resize();
+
+    let mouse = { x: -1000, y: -1000 };
+    let dragIndex = -1;
+
+    // Track mouse positioning
+    window.addEventListener('mousemove', e => {
+        mouse.x = e.clientX;
+        mouse.y = e.clientY;
+    });
+
+    window.addEventListener('mousedown', e => {
+        let bestDist = 80;
+        for (let i = 0; i < rope.points.length; i++) {
+            const p = rope.points[i];
+            const d = Math.hypot(p.x - mouse.x, p.y - mouse.y);
+            if (d < bestDist && !p.isPinned) {
+                bestDist = d;
+                dragIndex = i;
+            }
+        }
+    });
+
+    window.addEventListener('mouseup', () => dragIndex = -1);
+
+    window.addEventListener('touchmove', e => {
+        mouse.x = e.touches[0].clientX;
+        mouse.y = e.touches[0].clientY;
+    });
+
+    window.addEventListener('touchstart', e => {
+        mouse.x = e.touches[0].clientX;
+        mouse.y = e.touches[0].clientY;
+        let bestDist = 80;
+        for (let i = 0; i < rope.points.length; i++) {
+            const p = rope.points[i];
+            const d = Math.hypot(p.x - mouse.x, p.y - mouse.y);
+            if (d < bestDist && !p.isPinned) {
+                bestDist = d;
+                dragIndex = i;
+            }
+        }
+    });
+
+    window.addEventListener('touchend', () => dragIndex = -1);
+
+    const isDarkMode = () => window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+    // 1. Functional programming style, no classes
+    const createPoint = (x, y, isPinned = false) => ({ x, y, oldx: x, oldy: y, isPinned });
+    const createStick = (p0, p1, len) => ({ p0, p1, length: len || Math.hypot(p1.x - p0.x, p1.y - p0.y) });
+
+    const createRope = (x, y, length, segments) => {
+        const points = [];
+        const sticks = [];
+        const segLen = length / segments;
+        for (let i = 0; i < segments; i++) {
+            points.push(createPoint(x, y + i * segLen, i === 0));
+            if (i > 0) sticks.push(createStick(points[i - 1], points[i]));
+        }
+        return { points, sticks };
+    };
+
+    const createBulp = (attachedPoint) => {
+        return { point: attachedPoint, radius: 18 };
+    };
+
+    const rope = createRope(width / 2, 0, Math.min(height * 0.15, 120), 10);
+    const bulb = createBulp(rope.points[rope.points.length - 1]);
+
+    const updatePoints = (points) => {
+        const friction = 0.98;
+        const gravity = 0.5;
+        for (let i = 0; i < points.length; i++) {
+            const p = points[i];
+            if (p.isPinned) continue;
+
+            // 2. Mutations
+            if (dragIndex === i) {
+                p.x = mouse.x;
+                p.y = mouse.y;
+                p.oldx = p.x;
+                p.oldy = p.y;
+            } else {
+                const vx = (p.x - p.oldx) * friction;
+                const vy = (p.y - p.oldy) * friction;
+                p.oldx = p.x;
+                p.oldy = p.y;
+                p.x += vx;
+                p.y += vy + gravity;
+            }
+
+            if (p.x > width) p.x = width;
+            if (p.x < 0) p.x = 0;
+            if (p.y > height) p.y = height;
+        }
+    };
+
+    const updateSticks = (sticks) => {
+        for (let i = 0; i < 5; i++) {
+            for (let j = 0; j < sticks.length; j++) {
+                const s = sticks[j];
+                const dx = s.p1.x - s.p0.x;
+                const dy = s.p1.y - s.p0.y;
+                const distance = Math.hypot(dx, dy);
+                const diff = s.length - distance;
+                const percent = diff / distance / 2;
+                const ox = dx * percent;
+                const oy = dy * percent;
+
+                if (!s.p0.isPinned) { s.p0.x -= ox; s.p0.y -= oy; }
+                if (!s.p1.isPinned) { s.p1.x += ox; s.p1.y += oy; }
+            }
+        }
+    };
+
+    const draw = () => {
+        g.clearRect(0, 0, width, height);
+
+        g.beginPath();
+        for (let j = 0; j < rope.sticks.length; j++) {
+            const s = rope.sticks[j];
+            g.moveTo(s.p0.x, s.p0.y);
+            g.lineTo(s.p1.x, s.p1.y);
+        }
+        g.strokeStyle = colors.rope;
+        g.lineWidth = 5;
+        g.stroke();
+
+        const bp = bulb.point;
+        const lastStick = rope.sticks[rope.sticks.length - 1];
+        const dx = lastStick.p1.x - lastStick.p0.x;
+        const dy = lastStick.p1.y - lastStick.p0.y;
+        const angle = Math.atan2(dy, dx) - Math.PI / 2;
+        const radius = bulb.radius;
+        // 3. Dark mode toggles light on/off
+        const dark = isDarkMode();
+
+        g.save();
+        g.translate(bp.x, bp.y);
+        g.rotate(angle);
+
+        if (dark) {
+            g.beginPath();
+            g.arc(0, radius, radius * 2.5, 0, Math.PI * 2);
+            let grad = g.createRadialGradient(0, radius, radius * 0.2, 0, radius, radius * 2.5);
+            grad.addColorStop(0, colors.lightStart);
+            grad.addColorStop(1, colors.lightEnd);
+            g.fillStyle = grad;
+            g.fill();
+        }
+
+        g.fillStyle = colors.baseBottom;
+        g.fillRect(-radius * 0.4, -radius * 0.4, radius * 0.8, radius * 0.4);
+        g.fillStyle = colors.baseTop;
+        g.fillRect(-radius * 0.2, -radius * 0.6, radius * 0.4, radius * 0.2);
+
+        g.beginPath();
+        g.moveTo(radius * 0.4, 0);
+        g.bezierCurveTo(radius * 0.4, radius * 0.5, radius, radius * 0.5, radius, radius);
+        g.arc(0, radius, radius, 0, Math.PI, false);
+        g.bezierCurveTo(-radius, radius * 0.5, -radius * 0.4, radius * 0.5, -radius * 0.4, 0);
+        g.closePath();
+
+        g.fillStyle = colors.bulb;
+        if (dark) {
+            g.shadowColor = colors.bulbShadow;
+            g.shadowBlur = 12;
+        } else {
+            g.shadowBlur = 0;
+        }
+        g.fill();
+
+        g.shadowBlur = 0;
+        g.strokeStyle = colors.bulbOutline;
+        g.lineWidth = 1;
+        g.stroke();
+
+        g.restore();
+    };
+
+    const update = () => {
+        rope.points[0].x = width / 2;
+        rope.points[0].y = 0;
+        updatePoints(rope.points);
+        updateSticks(rope.sticks);
+        draw();
+
+        document.documentElement.style.setProperty('--lamp-x', `${bulb.point.x}px`);
+        document.documentElement.style.setProperty('--lamp-y', `${bulb.point.y + bulb.radius}px`);
+
+        requestAnimationFrame(update);
+    };
+
+    update();
+</script>
 
 </html>
